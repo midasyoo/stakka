@@ -1,0 +1,17 @@
+{
+  "name": "STAKKA — 한 손가락 탑 쌓기",
+  "short_name": "STAKKA",
+  "description": "탭 한 번으로 블록을 쌓아 올려라. 정확히 맞추면 PERFECT — 블록이 다시 커진다.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#0b1020",
+  "theme_color": "#0b1020",
+  "lang": "ko",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

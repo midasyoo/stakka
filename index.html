@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b1020">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="STAKKA">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<title>STAKKA — 한 손가락 탑 쌓기</title>
+<meta name="description" content="탭 한 번으로 블록을 쌓아 올려라. 정확히 맞추면 PERFECT — 블록이 다시 커진다. 설치 없이 바로 플레이.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="STAKKA">
+<meta property="og:title" content="STAKKA — 한 손가락 탑 쌓기">
+<meta property="og:description" content="탭 한 번으로 블록을 쌓아 올려라. 몇 층까지 갈 수 있나? 설치 없이 바로 플레이.">
+<meta property="og:image" content="https://midasyoo.github.io/stakka/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://midasyoo.github.io/stakka/">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;background:#0b1020;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    color:#fff;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
+    touch-action:none;overscroll-behavior:none}
+  #c{position:fixed;inset:0;display:block;width:100%;height:100%}
+  .ui{position:fixed;inset:0;pointer-events:none;display:flex;flex-direction:column;align-items:center}
+
+  #hud{margin-top:calc(env(safe-area-inset-top,0px) + 24px);text-align:center;transition:opacity .25s}
+  #score{font-size:clamp(56px,17vw,88px);font-weight:900;letter-spacing:-3px;line-height:.92;
+    text-shadow:0 6px 30px rgba(0,0,0,.6);font-variant-numeric:tabular-nums;
+    transition:transform .13s cubic-bezier(.2,1.6,.4,1)}
+  #combo{margin-top:8px;font-size:15px;font-weight:800;letter-spacing:2px;opacity:0;
+    color:#ffd76a;text-shadow:0 0 18px rgba(255,196,64,.85);transition:opacity .12s}
+  #combo.on{opacity:1}
+
+  .panel{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:0 26px;text-align:center;opacity:0;pointer-events:none;transition:opacity .28s ease;
+    background:radial-gradient(ellipse 80% 44% at 50% 46%,rgba(9,13,26,.92) 0%,rgba(9,13,26,.6) 58%,rgba(9,13,26,0) 84%)}
+  .panel.show{opacity:1}
+  #menu{padding-bottom:6vh}
+  #over{padding-bottom:18vh}
+  .logo{font-size:clamp(52px,16vw,112px);font-weight:900;letter-spacing:-5px;line-height:.9;
+    background:linear-gradient(180deg,#fff 18%,#8ec5ff 100%);-webkit-background-clip:text;background-clip:text;
+    color:transparent;filter:drop-shadow(0 10px 42px rgba(90,160,255,.5))}
+  .sub{font-size:13px;font-weight:700;letter-spacing:4px;color:#93a4c8;margin-top:4px}
+  .how{margin-top:24px;font-size:15px;line-height:1.85;color:#c8d4ee;font-weight:600}
+  .how b{color:#ffd76a}
+  .tap{margin-top:30px;font-size:16px;font-weight:900;letter-spacing:2px;
+    padding:14px 30px;border:2px solid rgba(255,255,255,.28);border-radius:999px;
+    background:rgba(255,255,255,.07);animation:pulse 1.5s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1);opacity:.82}50%{transform:scale(1.06);opacity:1}}
+  .best{margin-top:20px;font-size:12px;font-weight:800;letter-spacing:3px;color:#7f8fb3}
+  .best span{color:#fff;font-size:17px}
+
+  #over .big{font-size:19px;font-weight:900;letter-spacing:7px;color:#ff6b8a}
+  #over .num{font-size:clamp(72px,24vw,116px);font-weight:900;letter-spacing:-6px;line-height:1;
+    font-variant-numeric:tabular-nums;margin-top:6px}
+  #over .lbl{font-size:11px;font-weight:800;letter-spacing:5px;color:#7f8fb3;margin-top:4px}
+  #record{font-size:13px;font-weight:900;letter-spacing:3px;color:#0b1020;background:#ffd76a;
+    padding:7px 16px;border-radius:999px;margin-top:16px;visibility:hidden;
+    box-shadow:0 0 32px rgba(255,215,106,.65)}
+  #record.on{visibility:visible}
+  #mute{position:fixed;right:14px;top:calc(env(safe-area-inset-top,0px) + 14px);
+    width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;
+    font-size:18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);
+    cursor:pointer;opacity:.5;z-index:5}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="ui">
+  <div id="hud">
+    <div id="score">0</div>
+    <div id="combo">PERFECT ×0</div>
+  </div>
+
+  <div class="panel show" id="menu">
+    <div class="logo">STAKKA</div>
+    <div class="sub">한 손가락 탑 쌓기</div>
+    <div class="how">
+      화면을 <b>탭</b>해서 블록을 쌓아라<br>
+      정확히 맞추면 <b>PERFECT</b> — 블록이 다시 커진다
+    </div>
+    <div class="tap">탭해서 시작</div>
+    <div class="best">BEST <span id="menuBest">0</span></div>
+  </div>
+
+  <div class="panel" id="over">
+    <div class="big">TOWER DOWN</div>
+    <div class="num" id="overScore">0</div>
+    <div class="lbl">HEIGHT</div>
+    <div id="record">NEW RECORD!</div>
+    <div class="tap">탭해서 다시</div>
+    <div class="best">BEST <span id="overBest">0</span></div>
+  </div>
+</div>
+<div id="mute">🔊</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ───────── utils ───────── */
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const lerp  = (a, b, t) => a + (b - a) * t;
+const rnd   = (a, b) => a + Math.random() * (b - a);
+
+/* ───────── canvas ───────── */
+const cvs = document.getElementById('c');
+const ctx = cvs.getContext('2d', { alpha: false });
+let W = 0, H = 0, DPR = 1, VS = 1;
+
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 3);
+  // 캔버스의 실제 레이아웃 크기를 기준으로 — iOS 주소창 여닫힘/노치에 흔들리지 않는다
+  W = cvs.clientWidth || window.innerWidth;
+  H = cvs.clientHeight || window.innerHeight;
+  cvs.width  = Math.max(1, Math.round(W * DPR));
+  cvs.height = Math.max(1, Math.round(H * DPR));
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  VS = clamp(Math.min(W, H * 0.72) / 430, 0.62, 2.1);
+}
+addEventListener('resize', resize, { passive: true });
+addEventListener('orientationchange', () => setTimeout(resize, 150), { passive: true });
+if (window.visualViewport) window.visualViewport.addEventListener('resize', resize, { passive: true });
+
+/* ───────── tuning ───────── */
+const BASE     = 118;   // 기본 블록 한 변 (world unit)
+const BH       = 27;    // 블록 높이 (px)
+const IY       = 0.5;   // 2:1 아이소메트릭
+const PERFECT  = 4.4;   // 퍼펙트 허용 오차
+const GROW     = 5.5;   // 퍼펙트 회복량
+const MIN_SIZE = 2.2;   // 생존 최소 두께
+const AMP      = 108;   // 왕복 폭 — BASE보다 작아 초반엔 즉사 없고, 블록이 줄면 치명적이 된다
+const SPD0 = 108, SPD_K = 4.3, SPD_MAX = 385;
+const VIEW_N = 26;      // 렌더링할 최대 블록 수
+const ANCHOR = 0.70;    // 플레이 중 타워 꼭대기의 화면 세로 위치
+const ANCHOR_MENU = 0.94; // 메뉴에서는 타워를 아래로 밀어 UI와 겹치지 않게
+
+const hueFor = lv => (198 + lv * 5.5) % 360;
+
+/* ───────── state ───────── */
+let state = 'menu';                       // menu | play | over
+let blocks = [], mover = null;
+let debris = [], ripples = [], sparks = [];
+let score = 0, combo = 0;
+let best = load('stakka.best', 0);
+let muted = load('stakka.mute', 0) === 1;
+let camX = 0, camY = 0, camLv = 0, anchorY = ANCHOR_MENU;
+let shake = 0, flash = 0, overAt = 0, lastT = 0;
+
+function load(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : (parseInt(v, 10) || 0); } catch (e) { return d; } }
+function save(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) {} }
+
+/* ───────── audio (합성 · 에셋 0) ───────── */
+let AC = null;
+function ac() {
+  if (muted) return null;
+  if (!AC) { const A = window.AudioContext || window.webkitAudioContext; if (!A) return null; AC = new A(); }
+  if (AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function tone(freq, dur, type, vol, slide) {
+  const a = ac(); if (!a) return;
+  const t = a.currentTime;
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(40, slide), t + dur);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(a.destination);
+  o.start(t); o.stop(t + dur + 0.03);
+}
+const sfxPlace   = ()  => tone(180, 0.10, 'triangle', 0.16, 120);
+const sfxPerfect = n   => { const f = 523.25 * Math.pow(2, Math.min(n, 15) / 12); tone(f, 0.14, 'square', 0.09); tone(f * 2, 0.09, 'sine', 0.05); };
+const sfxFail    = ()  => { tone(220, 0.45, 'sawtooth', 0.15, 55); tone(90, 0.5, 'square', 0.10, 40); };
+const sfxStart   = ()  => { tone(392, 0.09, 'sine', 0.12); setTimeout(() => tone(587, 0.14, 'sine', 0.12), 80); };
+function buzz(p) { if (!muted && navigator.vibrate) { try { navigator.vibrate(p); } catch (e) {} } }
+
+/* ───────── dom ───────── */
+const $ = id => document.getElementById(id);
+const $score = $('score'), $combo = $('combo'), $hud = $('hud');
+const $menu = $('menu'), $over = $('over'), $rec = $('record');
+const $mBest = $('menuBest'), $oBest = $('overBest'), $oScore = $('overScore');
+const $mute = $('mute');
+
+$mute.textContent = muted ? '🔇' : '🔊';
+$mute.addEventListener('pointerdown', e => {
+  e.stopPropagation(); e.preventDefault();
+  muted = !muted; save('stakka.mute', muted ? 1 : 0);
+  $mute.textContent = muted ? '🔇' : '🔊';
+});
+
+function pop() {
+  $score.style.transform = 'scale(1.16)';
+  requestAnimationFrame(() => { $score.style.transform = 'scale(1)'; });
+}
+
+/* ───────── flow ───────── */
+function reset() {
+  blocks = [{ x: -BASE / 2, z: -BASE / 2, w: BASE, d: BASE, level: 0, hue: hueFor(0), sq: 0 }];
+  debris = []; ripples = []; sparks = [];
+  score = 0; combo = 0; mover = null;
+  shake = 0; flash = 0;
+  $score.textContent = '0';
+  $combo.classList.remove('on');
+  $mBest.textContent = best;
+}
+
+function start() {
+  reset(); snapCam(); spawn();
+  state = 'play';
+  $menu.classList.remove('show');
+  $over.classList.remove('show');
+  $hud.style.opacity = '1';
+  sfxStart();
+}
+
+function spawn() {
+  const p = blocks[blocks.length - 1];
+  const level = p.level + 1;
+  const axis = (level % 2 === 1) ? 'x' : 'z';
+  mover = {
+    x: p.x, z: p.z, w: p.w, d: p.d, level, axis, dir: 1,
+    hue: hueFor(level), speed: Math.min(SPD0 + level * SPD_K, SPD_MAX)
+  };
+  if (axis === 'x') mover.x = p.x - AMP; else mover.z = p.z - AMP;
+}
+
+function place() {
+  const p  = blocks[blocks.length - 1];
+  const ax = mover.axis;
+  const cur  = ax === 'x' ? mover.x : mover.z;
+  const pv   = ax === 'x' ? p.x : p.z;
+  const size = ax === 'x' ? p.w : p.d;
+  const delta = cur - pv, ad = Math.abs(delta);
+  const overlap = size - ad;
+
+  if (overlap <= MIN_SIZE) { fail(); return; }
+
+  let pos, sz, perfect = false;
+  // 허용 오차는 블록 크기에 비례 — 작아질수록 진짜 어려워진다
+  const tol = Math.min(PERFECT, size * 0.28);
+
+  if (ad <= tol) {                           // ── PERFECT
+    perfect = true;
+    combo++;
+    sz  = Math.min(size + (combo >= 2 ? GROW : 0), BASE);
+    pos = pv - (sz - size) / 2;
+  } else {                                   // ── 잘림
+    combo = 0;
+    pos = Math.max(pv, cur);
+    sz  = overlap;
+    const dPos = delta > 0 ? (pv + size) : cur;
+    debris.push({
+      x: ax === 'x' ? dPos : p.x,
+      z: ax === 'z' ? dPos : p.z,
+      w: ax === 'x' ? ad : p.w,
+      d: ax === 'z' ? ad : p.d,
+      h: mover.level * BH,
+      vy: rnd(25, 65),
+      vp: (delta > 0 ? 1 : -1) * rnd(45, 85),
+      ax, hue: mover.hue, a: 1, t: 0
+    });
+  }
+
+  const nb = {
+    x: ax === 'x' ? pos : p.x,
+    z: ax === 'z' ? pos : p.z,
+    w: ax === 'x' ? sz : p.w,
+    d: ax === 'z' ? sz : p.d,
+    level: mover.level, hue: mover.hue, sq: 1
+  };
+  blocks.push(nb);
+  score = nb.level;
+  $score.textContent = score;
+  pop();
+
+  if (perfect) {
+    ripples.push({ x: nb.x + nb.w / 2, z: nb.z + nb.d / 2, level: nb.level, r: 0, a: 1, big: combo >= 3 });
+    burst(nb, combo);
+    shake = Math.min(3 + combo * 1.1, 12);
+    flash = Math.min(0.09 + combo * 0.02, 0.28);
+    sfxPerfect(combo);
+    buzz(combo >= 3 ? 24 : 12);
+    $combo.textContent = 'PERFECT ×' + combo;
+    $combo.classList.add('on');
+  } else {
+    shake = Math.max(shake, 2.2);
+    sfxPlace();
+    $combo.classList.remove('on');
+  }
+
+  spawn();
+}
+
+function burst(b, n) {
+  const cx = b.x + b.w / 2, cz = b.z + b.d / 2;
+  const cnt = Math.min(8 + n * 3, 34);
+  for (let i = 0; i < cnt; i++) {
+    const a = Math.random() * Math.PI * 2, s = rnd(60, 260);
+    sparks.push({
+      X: cx - cz,
+      Y: (cx + cz) * IY - (b.level * BH + BH),
+      vx: Math.cos(a) * s, vy: Math.sin(a) * s - 70,
+      a: 1, sz: rnd(1.6, 4.2), hue: b.hue + rnd(-20, 40)
+    });
+  }
+}
+
+function fail() {
+  state = 'over';
+  overAt = performance.now();
+  debris.push({
+    x: mover.x, z: mover.z, w: mover.w, d: mover.d,
+    h: mover.level * BH, vy: 0, vp: 0, ax: mover.axis,
+    hue: mover.hue, a: 1, t: 0
+  });
+  mover = null;
+  shake = 14; flash = 0.22;
+  sfxFail(); buzz([30, 40, 60]);
+  $combo.classList.remove('on');
+
+  const isRec = score > best;
+  if (isRec) { best = score; save('stakka.best', best); }
+  $oScore.textContent = score;
+  $oBest.textContent = best;
+  $rec.classList.toggle('on', isRec);
+  setTimeout(() => {
+    if (state !== 'over') return;
+    $over.classList.add('show');
+    $hud.style.opacity = '0';
+  }, 420);
+}
+
+/* ───────── input ───────── */
+function tap() {
+  if (state === 'menu') return start();
+  if (state === 'play') return place();
+  if (state === 'over' && performance.now() - overAt > 540) start();
+}
+addEventListener('pointerdown', e => { e.preventDefault(); tap(); }, { passive: false });
+addEventListener('keydown', e => {
+  if (e.code === 'Space' || e.code === 'Enter' || e.code === 'ArrowDown') { e.preventDefault(); tap(); }
+}, { passive: false });
+addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('visibilitychange', () => { if (!document.hidden) lastT = performance.now(); });
+
+/* ───────── camera ───────── */
+function camGoal() {
+  const b = blocks[blocks.length - 1];
+  const cx = b.x + b.w / 2, cz = b.z + b.d / 2;
+  return { X: cx - cz, Y: (cx + cz) * IY - b.level * BH, L: b.level };
+}
+function snapCam() { const g = camGoal(); camX = g.X; camY = g.Y; camLv = g.L; }
+
+/* ───────── projection & boxes ───────── */
+function px(x, z, h) { return { X: x - z, Y: (x + z) * IY - h }; }
+
+function quad(a, b, c, d, fill) {
+  ctx.beginPath();
+  ctx.moveTo(a.X, a.Y); ctx.lineTo(b.X, b.Y); ctx.lineTo(c.X, c.Y); ctx.lineTo(d.X, d.Y);
+  ctx.closePath(); ctx.fillStyle = fill; ctx.fill();
+}
+
+function drawBox(x, z, w, d, hBot, hTop, hue, alpha, hi) {
+  if (alpha <= 0) return;
+  const A = px(x, z, hTop), B = px(x + w, z, hTop), C = px(x + w, z + d, hTop), D = px(x, z + d, hTop);
+  const Bb = px(x + w, z, hBot), Cb = px(x + w, z + d, hBot), Db = px(x, z + d, hBot);
+  ctx.globalAlpha = alpha;
+  quad(B, C, Cb, Bb, `hsl(${hue} 62% 41%)`);              // 우측면
+  quad(D, C, Cb, Db, `hsl(${hue} 60% 28%)`);              // 좌측면
+  quad(A, B, C, D, `hsl(${hue} 72% ${hi ? 74 : 60}%)`);   // 윗면
+  if (hi) {
+    ctx.lineWidth = 1.6; ctx.strokeStyle = 'rgba(255,255,255,.9)';
+    ctx.beginPath();
+    ctx.moveTo(A.X, A.Y); ctx.lineTo(B.X, B.Y); ctx.lineTo(C.X, C.Y); ctx.lineTo(D.X, D.Y);
+    ctx.closePath(); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ───────── background ───────── */
+function drawBG(lv) {
+  const hue = hueFor(lv);
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0,    `hsl(${(hue + 344) % 360} 48% 6%)`);
+  g.addColorStop(0.58, `hsl(${(hue + 12) % 360} 42% 12%)`);
+  g.addColorStop(1,    `hsl(${(hue + 34) % 360} 38% 6%)`);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+  const rad = Math.max(W, H) * 0.75;
+  const rg = ctx.createRadialGradient(W / 2, H * anchorY, 0, W / 2, H * anchorY, rad);
+  rg.addColorStop(0, `hsla(${hue} 82% 56% / .20)`);
+  rg.addColorStop(1, 'hsla(0 0% 0% / 0)');
+  ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = 'rgba(255,255,255,.3)';
+  const off = ((-camY) * 0.16) % 160;
+  for (let i = 0; i < 48; i++) {
+    const sx = ((i * 97) % 100) / 100 * W;
+    const sy = ((((i * 61) % 100) / 100) * H + off + H) % H;
+    const s = (i % 3) * 0.5 + 0.6;
+    ctx.fillRect(sx, sy, s, s);
+  }
+}
+
+/* ───────── update ───────── */
+function update(dt) {
+  const g = camGoal();
+  const k = 1 - Math.pow(0.0016, dt);
+  camX = lerp(camX, g.X, k);
+  camY = lerp(camY, g.Y, k);
+  camLv = lerp(camLv, g.L, k);
+  anchorY = lerp(anchorY, state === 'menu' ? ANCHOR_MENU : ANCHOR, 1 - Math.pow(0.02, dt));
+
+  if (state === 'play' && mover) {
+    const p = blocks[blocks.length - 1];
+    const ax = mover.axis;
+    const c = ax === 'x' ? p.x : p.z;
+    let v = (ax === 'x' ? mover.x : mover.z) + mover.dir * mover.speed * dt;
+    if (v > c + AMP) { v = c + AMP; mover.dir = -1; }
+    else if (v < c - AMP) { v = c - AMP; mover.dir = 1; }
+    if (ax === 'x') mover.x = v; else mover.z = v;
+  }
+
+  for (let i = Math.max(0, blocks.length - 4); i < blocks.length; i++) {
+    const b = blocks[i];
+    if (b.sq > 0) b.sq = Math.max(0, b.sq - dt * 5.2);
+  }
+
+  for (let i = debris.length - 1; i >= 0; i--) {
+    const d = debris[i];
+    d.t += dt;
+    d.vy -= 1750 * dt;
+    d.h  += d.vy * dt;
+    if (d.ax === 'x') d.x += d.vp * dt; else d.z += d.vp * dt;
+    if (d.t > 0.28) d.a -= dt * 1.15;
+    if (d.a <= 0) debris.splice(i, 1);
+  }
+
+  for (let i = ripples.length - 1; i >= 0; i--) {
+    const r = ripples[i];
+    r.r += dt * (r.big ? 430 : 300);
+    r.a -= dt * 1.9;
+    if (r.a <= 0) ripples.splice(i, 1);
+  }
+
+  for (let i = sparks.length - 1; i >= 0; i--) {
+    const s = sparks[i];
+    s.vy += 520 * dt;
+    s.X += s.vx * dt; s.Y += s.vy * dt;
+    s.a -= dt * 1.5;
+    if (s.a <= 0) sparks.splice(i, 1);
+  }
+
+  shake = Math.max(0, shake - dt * 34);
+  flash = Math.max(0, flash - dt * 1.4);
+}
+
+/* ───────── render ───────── */
+function render() {
+  const topLv = blocks[blocks.length - 1].level;
+  drawBG(topLv);
+
+  const sx = shake ? rnd(-shake, shake) : 0;
+  const sy = shake ? rnd(-shake, shake) : 0;
+
+  ctx.save();
+  ctx.translate(W / 2 + sx, H * anchorY + sy);
+  ctx.scale(VS, VS);
+  ctx.translate(-camX, -camY);
+
+  // 바닥 그림자
+  if (topLv < VIEW_N - 4) {
+    const b = blocks[0];
+    ctx.globalAlpha = 0.28; ctx.fillStyle = '#000';
+    const A = px(b.x, b.z, -7), B = px(b.x + b.w, b.z, -7),
+          C = px(b.x + b.w, b.z + b.d, -7), D = px(b.x, b.z + b.d, -7);
+    ctx.beginPath();
+    ctx.moveTo(A.X, A.Y); ctx.lineTo(B.X, B.Y); ctx.lineTo(C.X, C.Y); ctx.lineTo(D.X, D.Y);
+    ctx.closePath(); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  for (const d of debris) drawBox(d.x, d.z, d.w, d.d, d.h, d.h + BH, d.hue, clamp(d.a, 0, 1), false);
+
+  const from = Math.max(0, blocks.length - VIEW_N);
+  for (let i = from; i < blocks.length; i++) {
+    const b = blocks[i];
+    const bot = b.level * BH;
+    drawBox(b.x, b.z, b.w, b.d, bot, bot + BH * (1 - b.sq * 0.34), b.hue, 1, false);
+  }
+
+  if (mover) {
+    const bot = mover.level * BH;
+    drawBox(mover.x, mover.z, mover.w, mover.d, bot, bot + BH, mover.hue, 1, combo >= 2);
+  }
+
+  for (const r of ripples) {
+    ctx.globalAlpha = clamp(r.a, 0, 1) * 0.9;
+    ctx.strokeStyle = r.big ? '#ffd76a' : '#ffffff';
+    ctx.lineWidth = r.big ? 3 : 2;
+    const h = r.level * BH + BH;
+    const A = px(r.x - r.r, r.z - r.r, h), B = px(r.x + r.r, r.z - r.r, h),
+          C = px(r.x + r.r, r.z + r.r, h), D = px(r.x - r.r, r.z + r.r, h);
+    ctx.beginPath();
+    ctx.moveTo(A.X, A.Y); ctx.lineTo(B.X, B.Y); ctx.lineTo(C.X, C.Y); ctx.lineTo(D.X, D.Y);
+    ctx.closePath(); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  for (const s of sparks) {
+    ctx.globalAlpha = clamp(s.a, 0, 1);
+    ctx.fillStyle = `hsl(${s.hue} 92% 68%)`;
+    ctx.fillRect(s.X - s.sz / 2, s.Y - s.sz / 2, s.sz, s.sz);
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  // BEST 라인 (화면 좌표)
+  if (best > 0) {
+    const y = H * anchorY + VS * (camLv * BH - (best * BH + BH * 0.6));
+    if (y > 40 && y < H - 20) {
+      ctx.save();
+      ctx.globalAlpha = 0.8;
+      ctx.strokeStyle = '#ffd76a'; ctx.lineWidth = 1.4; ctx.setLineDash([8, 8]);
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#ffd76a';
+      ctx.font = '800 12px system-ui, sans-serif';
+      ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+      ctx.fillText('BEST ' + best, W - 14, y - 5);
+      ctx.restore();
+    }
+  }
+
+  if (flash > 0) {
+    ctx.fillStyle = `rgba(255,255,255,${flash})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+/* ───────── loop ───────── */
+function frame(t) {
+  const dt = clamp((t - lastT) / 1000, 0, 0.05);
+  lastT = t;
+  update(dt);
+  render();
+  requestAnimationFrame(frame);
+}
+
+/* ───────── boot ───────── */
+resize();
+reset();
+for (let i = 1; i <= 5; i++) {                    // 메뉴 배경용 데모 타워
+  const p = blocks[blocks.length - 1];
+  blocks.push({ x: p.x + rnd(-10, 10), z: p.z + rnd(-10, 10), w: p.w, d: p.d, level: i, hue: hueFor(i), sq: 0 });
+}
+snapCam();
+$mBest.textContent = best;
+$hud.style.opacity = '0';
+requestAnimationFrame(t => { lastT = t; requestAnimationFrame(frame); });
+})();
+</script>
+</body>
+</html>
