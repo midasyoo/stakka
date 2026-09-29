@@ -1,0 +1,7 @@
+_work/
+__pycache__/
+sk_raw/
+sk_out/
+sk_phone/
+sk_voice_clips/
+*.wav

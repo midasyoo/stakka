@@ -20,6 +20,14 @@
 
 ---
 
+## 홍보 영상 (1분)
+
+https://github.com/midasyoo/stakka/raw/main/stakka-trilogy-1min.mp4
+
+3부작을 한 편에 담은 소개 영상입니다 (1920×1080 · 60초 · 내레이션·배경음 포함).
+무음 자막판은 `stakka-trilogy-1min-silent.mp4` — 발표 배경용입니다.
+다시 만드는 방법은 [`tools/promo/`](tools/promo/) 참고.
+
 ## 게임 소개
 
 좌우로 왕복하는 블록을 **탭 한 번**으로 아래층에 맞춰 쌓아 올리는 아이소메트릭 타워 게임이다.
