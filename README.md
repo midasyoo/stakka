@@ -26,6 +26,19 @@ https://github.com/midasyoo/stakka/raw/main/stakka-trilogy-1min.mp4
 
 3부작을 한 편에 담은 소개 영상입니다 (1920×1080 · 60초 · 내레이션·배경음 포함).
 무음 자막판은 `stakka-trilogy-1min-silent.mp4` — 발표 배경용입니다.
+
+### 1편 전용 — 길이·화면비별 4종
+
+| 파일 | 길이 | 해상도 | 용도 |
+|---|---|---|---|
+| [`video/stakka1-60s-desktop.mp4`](video/stakka1-60s-desktop.mp4) | 60초 | 1920×1080 | 홈페이지·유튜브·발표 |
+| [`video/stakka1-30s-desktop.mp4`](video/stakka1-30s-desktop.mp4) | 30초 | 1920×1080 | 짧은 소개·광고 |
+| [`video/stakka1-60s-mobile.mp4`](video/stakka1-60s-mobile.mp4) | 60초 | 1080×1920 | 릴스·쇼츠·틱톡 |
+| [`video/stakka1-30s-mobile.mp4`](video/stakka1-30s-mobile.mp4) | 30초 | 1080×1920 | 스토리·짧은 세로 영상 |
+
+세로판은 게임이 화면 전체를 쓰고 자막이 아래에, 가로판은 가운데 세로 스테이지
+옆 여백에 자막이 들어갑니다.
+
 다시 만드는 방법은 [`tools/promo/`](tools/promo/) 참고.
 
 ## 게임 소개
